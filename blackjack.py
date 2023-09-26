@@ -115,6 +115,7 @@ class Blackjack:
         
     @Pyro5.api.expose
     def hit(cls, playerIndex):
+        db_instance = DBconnectSingleton()
         player=cls.players[playerIndex]
         print("Quedan "+ str(len(cls.deck[0].cards)) + " cartas en el mazo")
         print("Necesito "+ str(2+len(cls.players)*2) + " cartas para repartir")
@@ -132,6 +133,8 @@ class Blackjack:
                 player.outcome = "Te pasaste! Perdiste!"
                 player.cover = 0
                 player.bet = 0
+                db_instance.save_bet(player.name, player.ammount)
+
                 if playerIndex==cls.get_player_index(cls.players[-1].name):
                     cls.players[0].turn=True
                 else:
@@ -153,18 +156,17 @@ class Blackjack:
         cls.in_play=False
 
         for player in cls.players:
+            db_instance = DBconnectSingleton()
             player.cover = 0
             if player.in_play:
-
-               
-
+                
                 if cls.dealer[0].get_value() > 21:
 
                     player.outcome = "Ganaste! Repartiendo..."
                     player.in_play = False
                     player.ammount += player.bet*2
                     player.bet = 0
-
+                    db_instance.save_bet(player.name, player.ammount)
                 else:
 
                     if cls.dealer[0].get_value() >= player.hand.get_value():
@@ -172,15 +174,17 @@ class Blackjack:
                         player.outcome = "Perdiste! Repartiendo..."
                         player.in_play = False
                         player.bet = 0
-
+                        db_instance.save_bet(player.name, player.ammount)
                     else:
 
                         player.outcome = "Ganaste! Repartiendo..."
                         player.in_play = False
                         player.ammount += player.bet*2
                         player.bet = 0
+                        db_instance.save_bet(player.name, player.ammount)
+
             
-            t = Timer(5, cls.deal)
+            t = Timer(3, cls.deal)
             t.start()
         
 
