@@ -8,7 +8,8 @@ class Deck:
     def __init__(self):
 
         self.cards = []
-
+        
+        DBconnectSingleton().reset_deck()
         cards = DBconnectSingleton().get_all("tipoCarta, valorCarta, estado", "mazo")
         
 

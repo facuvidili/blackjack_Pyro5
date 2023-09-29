@@ -7,15 +7,15 @@ class Hand:
 
         self.cards = []
 
-    def __str__(self):
+    # def __str__(self):
 
-        s = "Cartas en la mano: "
+    #     s = "Cartas en la mano: "
 
-        for i in self.cards:
+    #     for i in self.cards:
 
-            s = s + str(i) + " "
+    #         s = s + str(i) + " "
 
-        return s
+    #     return s
 
     def add_card(self, card):
 

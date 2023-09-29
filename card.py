@@ -18,7 +18,7 @@ class Card:
             self.suit = None
             self.rank = None
             self.state = None
-            print ("Carta Inválida: ", suit, rank)
+            # print ("Carta Inválida: ", suit, rank)
 
     def __str__(self):
 

@@ -1,6 +1,6 @@
 class Player:
     
-    def __init__(self, name, ammount):
+    def __init__(self, name, ammount=10000):
 
         self.name = name
         self.index = None
@@ -8,8 +8,7 @@ class Player:
         self.hand = None
         self.cover = 0
         self.outcome = ""
-        self.in_play= False
-        self.score = 0
+        self.in_play = False
         self.turn = False
         self.bet = 0
 

@@ -1,5 +1,4 @@
 import SimpleGUICS2Pygame.simpleguics2pygame as simplegui
-import tkinter as tk
 from tkinter import simpledialog
 
 
@@ -98,4 +97,5 @@ class BjGUI:
         return self.user_name
 
     def leave(self):
+        self.blackjack.leave(self.playerIndex)
         self.frame.stop()
