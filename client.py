@@ -25,6 +25,6 @@ bjGui = BjGUI(blackjack)
 user = bjGui.input_name()
 
 if(user):
-    blackjack.join_game(user, 10000)
+    blackjack.join_game(user)
 
 bjGui.showFrame()
