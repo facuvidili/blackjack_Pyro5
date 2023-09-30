@@ -14,7 +14,7 @@ agenda = {"nabil": "DESKTOP-GDMDAN5",
           "tomas":"AN515",
           "pablo":"Pablo-Notebook"}
 
-ns = Pyro5.core.locate_ns(host=socket.gethostbyname(agenda["tomas"]) , port=9090)
+ns = Pyro5.core.locate_ns(host=socket.gethostbyname(agenda["facundo"]) , port=9090)
 
 uri = ns.lookup("blackjack")
 
@@ -24,7 +24,7 @@ bjGui = BjGUI(blackjack)
 
 user = bjGui.input_name()
 
-if(user):
+if user:
     blackjack.join_game(user)
 
-bjGui.showFrame()
+    bjGui.showFrame()
