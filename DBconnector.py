@@ -26,26 +26,46 @@ class DBconnectSingleton:
         cardId = mycursor.fetchone()
         return cardId
     
-    def update_all(self, deck, players):
-        mycursor = self.mydb.cursor()
-        mycursor.execute("UPDATE mazo SET estado = 0")
-        for card in deck.cards:
-            mycursor.execute("UPDATE mazo SET estado = 1 WHERE tipoCarta = '" + str(card.get_suit()) + "' AND valorCarta = '" + str(card.get_rank()) + "'")
+    def update_all(self, deck, players, dealer, dealerAmmount):
+        try:
+            mycursor = self.mydb.cursor()
+            mycursor.execute("UPDATE mazo SET estado = 0")
+            for card in deck.cards:
+                mycursor.execute("UPDATE mazo SET estado = 1 WHERE tipoCarta = '" + str(card.get_suit()) + "' AND valorCarta = '" + str(card.get_rank()) + "'")
 
-
-        mycursor.execute("DELETE FROM manoactual")
-        mycursor.execute("ALTER TABLE manoactual AUTO_INCREMENT=0;")
+            mycursor.execute("DELETE FROM manoactual")
+            mycursor.execute("ALTER TABLE manoactual AUTO_INCREMENT=0;")
         # mycursor.execute("DELETE FROM jugadores")
         # mycursor.execute("ALTER TABLE jugadores AUTO_INCREMENT=0;")
-       
-        for index, player in enumerate(players):
+            mycursor.execute("UPDATE jugadores SET saldo = '"+ str(dealerAmmount) +"' WHERE id = '99999999'")
+        except mysql.connector.Error as e:
+            print(f"Error al guardar el mazo: {e}")
+            self.mydb.rollback()
+        finally:
+            mycursor.close()
+
+        dealerCards = dealer.get_cards()
+        # print(*dealerCards)
+        for card in dealerCards:
+            mycursor = self.mydb.cursor()
+            try:
+                mycursor.execute("INSERT INTO manoactual (idCarta, idJugador) VALUES ('"
+                                        + str(self.get_card_id(card.rank, card.suit)[0]) 
+                                        + "', '99999999')")
+            except mysql.connector.Error as e:
+                print(f"Error al guardar la mano del dealer: {e}")
+                self.mydb.rollback()
+            finally:
+                mycursor.close()
+            
+        for player in players:
             # mycursor.execute("INSERT INTO jugadores (id, nombre, saldo) VALUES ('" + str(index+1) + "', '"  + player.name + "', '" + str(player.ammount) + "')")
             try:
                 mycursor = self.mydb.cursor()
                 # Verificamos si ya existe un registro con el mismo nombre
                 mycursor.execute("SELECT nombre FROM jugadores WHERE nombre = '" + player.name + "'")
                 existing_record = mycursor.fetchone()
-        
+                
                 if existing_record:
                     # Si existe un registro con el mismo nombre, actualizamos el saldo
                     mycursor.execute("UPDATE jugadores SET saldo = '"+ str(player.ammount) +"' WHERE nombre = '" + player.name + "'")
@@ -100,6 +120,18 @@ class DBconnectSingleton:
                 return ammount[0]
             else:
                 return -1
+        except mysql.connector.Error as e:
+                print(f"Error al extraer monto: {e}")
+                self.mydb.rollback()
+        finally:
+                mycursor.close()
+
+    def get_dealer_ammount(self):
+        try:
+            mycursor = self.mydb.cursor()
+            mycursor.execute("SELECT saldo FROM jugadores WHERE id = '99999999'")
+            ammount = mycursor.fetchone()
+            return ammount[0]
         except mysql.connector.Error as e:
                 print(f"Error al extraer monto: {e}")
                 self.mydb.rollback()

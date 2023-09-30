@@ -21,7 +21,13 @@ class Blackjack:
     turn = 0
     in_play = []
     cover = 0
-    
+    ammount = []
+    if ammount:
+        ammount[0]=DBconnectSingleton().get_dealer_ammount()
+    else:
+        ammount.append(DBconnectSingleton().get_dealer_ammount())
+
+
 
     @Pyro5.api.expose
     def join_game(cls, playerName):
@@ -65,7 +71,7 @@ class Blackjack:
         player.bet += 100
         player.ammount -= 100
 
-        DBconnectSingleton().update_all(cls.deck[0], cls.players)
+        DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
 
     @Pyro5.api.expose
     def deal(cls):
@@ -109,7 +115,7 @@ class Blackjack:
 
         cls.players[0].turn = True
         
-        DBconnectSingleton().update_all(cls.deck[0], cls.players)
+        DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
 
     def shuffle(cls):
         new_deck = Deck()
@@ -133,9 +139,9 @@ class Blackjack:
             if player.hand.get_value() > 21:
                 player.in_play = False
                 player.outcome = "Te pasaste! Perdiste!"
+                cls.ammount[0] += player.bet
                 player.bet = 0
-                
-                
+                # print("Saldo banca: " + str(cls.ammount[0]))
 
                 if player == cls.players[-1]:
                     cls.show_outcome()
@@ -146,7 +152,7 @@ class Blackjack:
                     cls.players[playerIndex].turn = False
                     cls.players[playerIndex + 1].turn = True
                     cls.players[playerIndex + 1].outcome = "Ya Puedes Jugar!"
-        DBconnectSingleton().update_all(cls.deck[0], cls.players)
+        DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
 
 
 
@@ -164,6 +170,8 @@ class Blackjack:
                     if cls.dealer[0].get_value() >= player.hand.get_value():
                         player.outcome = "Perdiste! Repartiendo..."
                         player.in_play = False
+                        cls.ammount[0] += player.bet
+                        # print("Saldo banca: " + str(cls.ammount[0]))
                         player.bet = 0
 
                     else:
@@ -171,7 +179,7 @@ class Blackjack:
                         player.in_play = False
                         player.ammount += player.bet * 2
                         player.bet = 0
-        DBconnectSingleton().update_all(cls.deck[0], cls.players)
+        DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
 
     @Pyro5.api.expose
     def dealer_play(cls):
@@ -180,6 +188,7 @@ class Blackjack:
                 cls.shuffle()
             cls.card = cls.deck[0].deal_card()
             cls.dealer[0].add_card(cls.card)
+            DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
         cls.in_play.clear()
         cls.show_outcome()
 
