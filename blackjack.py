@@ -1,9 +1,11 @@
 # Blackjack Card Game
-
+import time
+import sys
 
 # from card import Card
 from deck import Deck
 from hand import Hand
+from card import Card
 from player import Player
 
 # define event handlers for buttons
@@ -17,32 +19,59 @@ class Blackjack:
     players = []
     card = None
     deck = []
+    if deck:
+        deck[0] = Deck()
+    else:
+        deck.append(Deck())
+    deck[0].shuffle()
     dealer = []
+    dealerCards = DBconnectSingleton().get_dealers_cards()
+    if dealerCards:
+        new_dealer = Hand()
+        dealer.append(new_dealer)
+        for tuple in dealerCards:
+            card1 = Card(tuple[0], tuple[1], tuple[2])
+            dealer[0].add_card(card1)
     turn = 0
     in_play = []
     cover = 0
     ammount = []
     if ammount:
-        ammount[0]=DBconnectSingleton().get_dealer_ammount()
+        ammount[0] = DBconnectSingleton().get_dealer_ammount()
     else:
         ammount.append(DBconnectSingleton().get_dealer_ammount())
 
-
-
     @Pyro5.api.expose
     def join_game(cls, playerName):
-
         ammount = DBconnectSingleton().get_one_ammount(playerName)
-      
-        if ammount!=-1:
-            player = Player(playerName, ammount)
+        # print("no es ammount: " + str(ammount))
+        bet = DBconnectSingleton().get_one_bet(playerName)
+        # print("no es bet: " + str(bet))
+        cards = DBconnectSingleton().get_one_hand(playerName)
+
+        if cards:
+            hand = Hand()
+            for tuple in cards:
+                card = Card(tuple[0], tuple[1], tuple[2])
+                hand.add_card(card)
+            if ammount != -1:
+                player = Player(playerName, hand, ammount, bet)
+                if not cls.players:
+                    player.turn = True
+                    player.cover = 1
+                if player.bet:
+                    player.in_play = True
+                cls.players.append(player)
         else:
-            player = Player(playerName, 10000)
-        cls.players.append(player)
-        # print(*cls.players)
-        
-        cls.deal()
-       
+            player = Player(playerName, Hand(), 10000, 0)
+            player.cover = 1
+            cls.players.append(player)
+            cls.deal()
+
+        print("Nuevo Jugador: " + str(playerName))
+        print("Jugadores:")
+        for player in cls.players:
+            print("Nombre: " + player.name + ", Monto: " + str(player.ammount))
 
     @Pyro5.api.expose
     def take_turn(cls, playerIndex):
@@ -71,7 +100,7 @@ class Blackjack:
         player.bet += 100
         player.ammount -= 100
 
-        DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
+        DBconnectSingleton().update_player_ammount(player)
 
     @Pyro5.api.expose
     def deal(cls):
@@ -85,9 +114,6 @@ class Blackjack:
             # print("Nuevo Mazo")
             # print("Mazos:" + str(len(cls.deck)))
         # Reparte al Dealer
-
-        
-        
         if not cls.in_play:
             new_dealer = Hand()
             if not cls.dealer:
@@ -101,7 +127,6 @@ class Blackjack:
         # print("Nuevo Dealer")
 
         # Reparte a los jugadores
-        
         for i in cls.players:
             if not i.in_play:
                 new_hand = Hand()
@@ -114,15 +139,16 @@ class Blackjack:
                 i.turn = False
 
         cls.players[0].turn = True
-        
-        DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
+
+        DBconnectSingleton().update_all(
+            cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0]
+        )
 
     def shuffle(cls):
         new_deck = Deck()
         cls.deck.clear()
         cls.deck.append(new_deck)
         cls.deck[0].shuffle()
-       
 
     @Pyro5.api.expose
     def hit(cls, playerIndex):
@@ -146,15 +172,14 @@ class Blackjack:
                 if player == cls.players[-1]:
                     cls.show_outcome()
                     cls.players[0].turn = True
-                    t = Timer(3, cls.deal)
+                    t = Timer(5, cls.deal)
                     t.start()
                 else:
                     cls.players[playerIndex].turn = False
                     cls.players[playerIndex + 1].turn = True
                     cls.players[playerIndex + 1].outcome = "Ya Puedes Jugar!"
-        DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
 
-
+        DBconnectSingleton().update_player_hand(player)
 
     def show_outcome(cls):
         for player in cls.players:
@@ -179,8 +204,10 @@ class Blackjack:
                         player.in_play = False
                         player.ammount += player.bet * 2
                         player.bet = 0
-        DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
 
+            DBconnectSingleton().update_player_ammount(player)
+        # DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
+    
     @Pyro5.api.expose
     def dealer_play(cls):
         while cls.dealer[0].get_value() < 17:
@@ -188,11 +215,11 @@ class Blackjack:
                 cls.shuffle()
             cls.card = cls.deck[0].deal_card()
             cls.dealer[0].add_card(cls.card)
-            DBconnectSingleton().update_all(cls.deck[0], cls.players, cls.dealer[0], cls.ammount[0])
+            DBconnectSingleton().update_dealer_hand(cls.dealer[0])
         cls.in_play.clear()
         cls.show_outcome()
 
-        t = Timer(3, cls.deal)
+        t = Timer(5, cls.deal)
         t.start()
 
     @Pyro5.api.expose
@@ -211,7 +238,6 @@ class Blackjack:
     @Pyro5.api.expose
     def leave(cls, playerIndex):
         cls.players.pop(playerIndex)
-        
 
     @Pyro5.api.expose
     def get_dealers_cards(cls):
@@ -302,9 +328,8 @@ class Blackjack:
         return player.cover
 
     @Pyro5.api.expose
-    def set_cover(cls, cover):
-        cls.cover = cover
-
-    @Pyro5.api.expose
-    def get_dealer_cover(cls):
-        return cls.cover
+    def get_players(cls):
+        playersNames = []
+        for player in cls.players:
+            playersNames.append(player.get_name())
+        return playersNames

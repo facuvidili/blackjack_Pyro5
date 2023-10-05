@@ -36,18 +36,16 @@ class BjGUI:
             j = j + 1
 
     def draw(self, canvas):
-        
-        self.playerIndex= self.blackjack.get_player_index(self.user_name) 
         canvas.draw_text("Blackjack", (210, 70), 48, 'Black')
-        canvas.draw_text("Apuesta: " + str(self.blackjack.get_bet(self.playerIndex)), (250, 110), 32, 'Black')
+        canvas.draw_text("Apuesta: " + str(self.blackjack.get_bet(self.blackjack.get_player_index(self.user_name))), (250, 110), 32, 'Black')
         canvas.draw_text("Banca:", (100, 180), 32, 'Black')
         canvas.draw_text("Jugador: "+ self.user_name, (100, 390), 32, 'Black')
-        canvas.draw_text("Monto: "+ str(self.blackjack.get_ammount(self.playerIndex)), (395, 390), 32, 'Black')
+        canvas.draw_text("Monto: "+ str(self.blackjack.get_ammount(self.blackjack.get_player_index(self.user_name))), (395, 390), 32, 'Black')
         self.draw_hand(self.blackjack.get_dealers_cards(), canvas, [100, 210])
-        self.draw_hand(self.blackjack.get_players_cards(self.playerIndex), canvas, [100, 420])
-        canvas.draw_text(self.blackjack.get_outcome(self.playerIndex), (80, 560), 34, 'Black')
+        self.draw_hand(self.blackjack.get_players_cards(self.blackjack.get_player_index(self.user_name)), canvas, [100, 420])
+        canvas.draw_text(self.blackjack.get_outcome(self.blackjack.get_player_index(self.user_name)), (80, 560), 34, 'Black')
 
-        if self.blackjack.get_cover(self.playerIndex) == 1:
+        if self.blackjack.get_cover(self.blackjack.get_player_index(self.user_name)) == 1:
 
             canvas.draw_image(card_back, CARD_BACK_CENTER, CARD_BACK_SIZE, [136.5, 259], CARD_SIZE)
 
@@ -67,26 +65,22 @@ class BjGUI:
 
         # get things rolling
         
-        # self.blackjack.draw()
         self.frame.start()
 
     def deal(self):
         self.blackjack.deal()
 
     def take_turn(self):
-        self.blackjack.take_turn(self.playerIndex)
-
-    # def stand_turn(self):
-    #     self.blackjack.stand_turn(self.playerIndex)
+        self.blackjack.take_turn(self.blackjack.get_player_index(self.user_name))
 
     def bet(self):
-        self.blackjack.bet(self.playerIndex)
+        self.blackjack.bet(self.blackjack.get_player_index(self.user_name))
 
     def hit(self):
-        self.blackjack.hit(self.playerIndex)
+        self.blackjack.hit(self.blackjack.get_player_index(self.user_name))
     
     def stand(self):
-        self.blackjack.stand_turn(self.playerIndex)
+        self.blackjack.stand_turn(self.blackjack.get_player_index(self.user_name))
 
     def input_name(self):
     #    the input dialog
@@ -97,5 +91,5 @@ class BjGUI:
         return self.user_name
 
     def leave(self):
-        self.blackjack.leave(self.playerIndex)
+        self.blackjack.leave(self.blackjack.get_player_index(self.user_name))
         self.frame.stop()
