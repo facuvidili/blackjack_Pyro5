@@ -2,7 +2,6 @@ from Pyro5.api import expose, behavior, serve
 import Pyro5.api
 import socket
 
-from nameserver import NameServerSingleton
 from blackjack import Blackjack
 
 
@@ -17,7 +16,7 @@ class Server:
         try:
             agenda = {"facundo":"Chimi",
             "tomas":"AN515"}
-            ns = Pyro5.core.locate_ns(socket.gethostbyname(agenda[backup_hostname]), port=9090)
+            ns = Pyro5.core.locate_ns(backup_hostname, port=9090)
             #print(ns.list(return_metadata=True))
             uri = ns.lookup("server")
             self.__backup = Pyro5.client.Proxy(uri)
@@ -85,7 +84,7 @@ serve(
     {
         Server: "server",
     },
-    host=IPAddr,
+    host='172.16.110.210',
     port=9092,
     verbose=True,
 )

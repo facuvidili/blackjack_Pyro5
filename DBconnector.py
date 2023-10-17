@@ -33,9 +33,9 @@ class DBconnectSingleton:
     def connect(self):
         try:
                     mydb = mysql.connector.connect(
-                    host="192.168.100.7",
-                    user="chimi",
-                    password="chimi",
+                    host="172.16.205.157",
+                    user="root",
+                    password="",
                     database="blackjack"
                     
                     )
@@ -46,8 +46,10 @@ class DBconnectSingleton:
                         user="root",
                         password="",
                         database="blackjack"
+
                         
                         )
+                        None
                     except mysql.connector.Error as e:
                         print(f"Error al conectarse a la base de datos: {e}")
                         sys.exit()

@@ -9,7 +9,7 @@ def conectar(main_name_server, backup_name_server=None):
     try:
         agenda = {"facundo":"Chimi",
        "tomas":"AN515"}
-        ns = Pyro5.core.locate_ns(socket.gethostbyname(agenda[main_name_server]), port=9090)
+        ns = Pyro5.core.locate_ns(main_name_server, port=9090)
         uri = ns.lookup("server")
         server = Pyro5.client.Proxy(uri)
     except Pyro5.errors.NamingError as e:
@@ -19,7 +19,7 @@ def conectar(main_name_server, backup_name_server=None):
     return server
 
 
-server = conectar("facundo", "tomas")
+server = conectar('172.16.110.210', '172.16.205.157')
 
 try:
     bjGui = BjGUI(server)
@@ -36,4 +36,4 @@ try:
 
 except Exception:
     print("Error! conectando con servidor de backup...")
-    server = conectar("tomas")
+    server = conectar('172.16.205.157')
